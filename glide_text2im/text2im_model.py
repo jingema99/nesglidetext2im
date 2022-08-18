@@ -121,15 +121,16 @@ class Text2ImUNet(UNetModel):
     def del_cache(self):
         self.cache = None
 
-    def forward(self, x, timesteps, tokens=None, mask=None):
+    def forward(self, x, timesteps, tokens=None, mask=None, text_outputs=None):
+        # text_outputs = self.get_text_emb(tokens, mask)
+        
+        xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
+
         hs = []
         emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
-        if self.xf_width:
-            text_outputs = self.get_text_emb(tokens, mask)
-            xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
-            emb = emb + xf_proj.to(emb)
-        else:
-            xf_out = None
+
+        emb = emb + xf_proj.to(emb)
+
         h = x.type(self.dtype)
         for module in self.input_blocks:
             h = module(h, emb, xf_out)
