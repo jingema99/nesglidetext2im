@@ -121,9 +121,9 @@ class Text2ImUNet(UNetModel):
     def del_cache(self):
         self.cache = None
 
-    def forward(self, x, timesteps, tokens=None, mask=None, text_outputs=None):
+    def forward(self, x, timesteps, text_outputs=None):
         # text_outputs = self.get_text_emb(tokens, mask)
-        
+        assert text_outputs is not None
         xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
 
         hs = []
