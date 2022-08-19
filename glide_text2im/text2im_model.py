@@ -63,8 +63,7 @@ class Text2ImUNet(UNetModel):
             self.positional_embedding = nn.Parameter(th.empty(text_ctx, xf_width, dtype=th.float32))
             self.transformer_proj = nn.Linear(xf_width, self.model_channels * 4)
 
-            if self.xf_padding:
-                self.padding_embedding = nn.Parameter(
+            self.padding_embedding = nn.Parameter(
                     th.empty(text_ctx, xf_width, dtype=th.float32)
                 )
             if self.xf_ar:
