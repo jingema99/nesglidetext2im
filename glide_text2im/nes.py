@@ -16,6 +16,7 @@ class NES(nn.Module):
     super(NES, self).__init__()
 
     self.xf_padding = xf_padding
+    self.xf_width = xf_width
     
     if xf_final_ln:
          self.final_ln = LayerNorm(xf_width)
@@ -36,6 +37,12 @@ class NES(nn.Module):
             th.empty(text_ctx, xf_width, dtype=th.float32)
         )
 
+    self.routing =  nn.Sequential(
+          nn.Linear(xf_width,1),
+          nn.Sigmoid()
+        )
+
+
   def forward(self, tokens=None, mask=None):
       assert tokens is not None
 
@@ -47,7 +54,14 @@ class NES(nn.Module):
       xf_out = self.transformer(xf_in)
       if self.final_ln is not None:
           xf_out = self.final_ln(xf_out)
+      
+      routing_matrix = self.routing(xf_out)
+      routing_weight = routing_matrix.repeat(1, 1, self.xf_width)
+      # xf_out = routing_weight * xf_out
+      xf_out = xf_out * routing_weight
+
       xf_proj = self.transformer_proj(xf_out[:, -1])
+
       xf_out = xf_out.permute(0, 2, 1)  # NLC -> NCL
 
       outputs = dict(xf_proj=xf_proj, xf_out=xf_out)
