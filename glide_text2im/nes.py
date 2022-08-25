@@ -17,6 +17,7 @@ class NES(nn.Module):
 
     self.xf_padding = xf_padding
     self.xf_width = xf_width
+    self.num_events = 3
     
     if xf_final_ln:
          self.final_ln = LayerNorm(xf_width)
@@ -38,8 +39,8 @@ class NES(nn.Module):
         )
 
     self.routing =  nn.Sequential(
-          nn.Linear(xf_width,1),
-          nn.Sigmoid()
+          nn.Linear(xf_width,self.num_events),#num events = 3
+          nn.Softmax(dim=2),
         )
 
 
@@ -55,16 +56,18 @@ class NES(nn.Module):
       if self.final_ln is not None:
           xf_out = self.final_ln(xf_out)
       
-      routing_matrix = self.routing(xf_out)
-      routing_weight = routing_matrix.repeat(1, 1, self.xf_width)
-      # xf_out = routing_weight * xf_out
-      xf_out = xf_out * routing_weight
+      routing_matrix = self.routing(xf_out)#routing matrix [4,128,3]
 
-      xf_proj = self.transformer_proj(xf_out[:, -1])
+      Outputs = []
 
-      xf_out = xf_out.permute(0, 2, 1)  # NLC -> NCL
+      for event_idx in range(self.num_events):
 
-      outputs = dict(xf_proj=xf_proj, xf_out=xf_out)
+        routing_weight = routing_matrix[:,:,event_idx].unsqueeze(2).repeat(1, 1, self.xf_width)
+        event_out = xf_out * routing_weight
+        event_proj = self.transformer_proj(event_out[:, -1])
+        event_out = event_out.permute(0, 2, 1)  # NLC -> NCL
+        outputs = dict(xf_proj=event_proj, xf_out=event_out)
+        Outputs.append(outputs)
 
-      return outputs
+      return Outputs
 
