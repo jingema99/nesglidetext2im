@@ -120,27 +120,34 @@ class Text2ImUNet(UNetModel):
     def del_cache(self):
         self.cache = None
 
-    def forward(self, x, timesteps, text_outputs=None):
+    def forward(self, x, timesteps, Text_outputs=None):
         # text_outputs = self.get_text_emb(tokens, mask)
-        assert text_outputs is not None
-        xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
+        assert Text_outputs is not None
 
-        hs = []
-        emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
+        H = []
+        for text_outputs in Text_outputs:
+          xf_proj, xf_out = text_outputs["xf_proj"], text_outputs["xf_out"]
 
-        emb = emb + xf_proj.to(emb)
+          hs = []
+          emb = self.time_embed(timestep_embedding(timesteps, self.model_channels))
 
-        h = x.type(self.dtype)
-        for module in self.input_blocks:
-            h = module(h, emb, xf_out)
-            hs.append(h)
-        h = self.middle_block(h, emb, xf_out)
-        for module in self.output_blocks:
-            h = th.cat([h, hs.pop()], dim=1)
-            h = module(h, emb, xf_out)
-        h = h.type(x.dtype)
-        h = self.out(h)
-        return h
+          emb = emb + xf_proj.to(emb)
+
+          h = x.type(self.dtype)
+          for module in self.input_blocks:
+              h = module(h, emb, xf_out)
+              hs.append(h)
+          h = self.middle_block(h, emb, xf_out)
+          for module in self.output_blocks:
+              h = th.cat([h, hs.pop()], dim=1)
+              h = module(h, emb, xf_out)
+          h = h.type(x.dtype)
+          h = self.out(h)
+          H.append(h)
+
+        mean = th.mean(th.stack(H),dim=0)
+        
+        return mean
 
 
 class SuperResText2ImUNet(Text2ImUNet):
