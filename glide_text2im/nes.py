@@ -5,11 +5,11 @@ from glide_text2im.xf import LayerNorm, Transformer, convert_module_to_f16
 class NES(nn.Module):
 
   def __init__(self,
-        text_ctx=128,
+        text_ctx=3,
         xf_width=512,
         xf_layers=16,
         xf_heads=8,
-        n_vocab=50257,
+        n_vocab=14,
         model_channels=192,
         xf_padding=True,
         xf_final_ln=True,):
