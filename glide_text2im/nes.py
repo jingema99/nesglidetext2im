@@ -1,3 +1,4 @@
+#nes.py
 import torch as th
 import torch.nn as nn
 from glide_text2im.xf import LayerNorm, Transformer, convert_module_to_f16
@@ -70,4 +71,4 @@ class NES(nn.Module):
         Outputs.append(outputs)
 
       return Outputs
-
+#nes.py
