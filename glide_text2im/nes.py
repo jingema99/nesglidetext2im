@@ -18,7 +18,6 @@ class NES(nn.Module):
 
     self.xf_padding = xf_padding
     self.xf_width = xf_width
-    self.num_events = 3
     
     if xf_final_ln:
          self.final_ln = LayerNorm(xf_width)
