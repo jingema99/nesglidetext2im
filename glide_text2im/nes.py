@@ -39,10 +39,6 @@ class NES(nn.Module):
             th.empty(text_ctx, xf_width, dtype=th.float32)
         )
 
-    self.routing =  nn.Sequential(
-          nn.Linear(xf_width,self.num_events),#num events = 3
-          nn.Softmax(dim=2),
-        )
 
 
   def forward(self, tokens=None, mask=None):
@@ -57,18 +53,12 @@ class NES(nn.Module):
       if self.final_ln is not None:
           xf_out = self.final_ln(xf_out)
       
-      routing_matrix = self.routing(xf_out)#routing matrix [4,128,3]
 
       Outputs = []
-
-      for event_idx in range(self.num_events):
-
-        routing_weight = routing_matrix[:,:,event_idx].unsqueeze(2).repeat(1, 1, self.xf_width)
-        event_out = xf_out * routing_weight
-        event_proj = self.transformer_proj(event_out[:, -1])
-        event_out = event_out.permute(0, 2, 1)  # NLC -> NCL
-        outputs = dict(xf_proj=event_proj, xf_out=event_out)
-        Outputs.append(outputs)
+      xf_proj = self.transformer_proj(xf_out[:, -1])
+      xf_out = xf_out.permute(0, 2, 1)  # NLC -> NCL
+      outputs = dict(xf_proj=xf_proj, xf_out=xf_out)
+      Outputs.append(outputs)
 
       return Outputs
 #nes.py
