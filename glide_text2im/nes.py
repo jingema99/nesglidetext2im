@@ -42,12 +42,12 @@ class NES(nn.Module):
 
   def forward(self, tokens=None, mask=None):
       assert tokens is not None
-
       xf_in = self.token_embedding(tokens.long())
       xf_in = xf_in + self.positional_embedding[None]
       if self.xf_padding:
           assert mask is not None
           xf_in = th.where(mask[..., None], xf_in, self.padding_embedding[None])
+      #xf_in: [6,8,512]
       xf_out = self.transformer(xf_in)
       if self.final_ln is not None:
           xf_out = self.final_ln(xf_out)
@@ -56,7 +56,7 @@ class NES(nn.Module):
       Outputs = []
       xf_proj = self.transformer_proj(xf_out[:, -1])
       xf_out = xf_out.permute(0, 2, 1)  # NLC -> NCL
-      outputs = dict(xf_proj=xf_proj, xf_out=xf_out)
+      outputs = dict(xf_proj=xf_proj, xf_out=xf_out[:,:,-1].unsqueeze(2))
       Outputs.append(outputs)
 
       return Outputs
