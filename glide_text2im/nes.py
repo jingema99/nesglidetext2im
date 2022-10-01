@@ -19,7 +19,7 @@ class NES(nn.Module):
 
     self.xf_padding = xf_padding
     self.xf_width = xf_width
-    self.num_events = 1
+    self.num_events = 3
     
     if xf_final_ln:
          self.final_ln = LayerNorm(xf_width)
@@ -51,7 +51,6 @@ class NES(nn.Module):
       xf_out = self.slot_attn(xf_in)
       Outputs = []
       for i in range(self.num_events):
-
         embedding = xf_out[:, i]
         xf_proj = self.transformer_proj(embedding)
         outputs = dict(xf_proj=xf_proj, xf_out=embedding.unsqueeze(2))
