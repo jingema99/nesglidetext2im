@@ -24,13 +24,7 @@ class NES(nn.Module):
     if xf_final_ln:
          self.final_ln = LayerNorm(xf_width)
 
-    if xf_width:
-        self.transformer = Transformer(
-              text_ctx,
-              xf_width,
-              xf_layers,
-              xf_heads,
-          )      
+    if xf_width: 
         self.token_embedding = nn.Embedding(n_vocab, xf_width)
         self.positional_embedding = nn.Parameter(th.empty(text_ctx, xf_width, dtype=th.float32))
         self.transformer_proj = nn.Linear(xf_width, model_channels * 4)
@@ -46,8 +40,6 @@ class NES(nn.Module):
         )
 
 
-
-
   def forward(self, tokens=None, mask=None):
       assert tokens is not None
       xf_in = self.token_embedding(tokens.long())
@@ -57,7 +49,6 @@ class NES(nn.Module):
           xf_in = th.where(mask[..., None], xf_in, self.padding_embedding[None])
       #xf_in: [6,8,512]
       xf_out = self.slot_attn(xf_in)
-      
       Outputs = []
       for i in range(self.num_events):
 
