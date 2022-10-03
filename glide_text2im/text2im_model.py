@@ -144,10 +144,8 @@ class Text2ImUNet(UNetModel):
           h = h.type(x.dtype)
           h = self.out(h)
           H.append(h)
-
-        mean = th.mean(th.stack(H),dim=0)
         
-        return mean
+        return H
 
 
 class SuperResText2ImUNet(Text2ImUNet):
