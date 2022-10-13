@@ -19,7 +19,6 @@ class NES(nn.Module):
 
     self.xf_padding = xf_padding
     self.xf_width = xf_width
-    self.num_events = 3
     
     if xf_final_ln:
          self.final_ln = LayerNorm(xf_width)
@@ -34,7 +33,7 @@ class NES(nn.Module):
             th.empty(text_ctx, xf_width, dtype=th.float32)
         )
     self.slot_attn = SlotAttention(
-            num_slots = self.num_events,
+            num_slots = 1,
             dim = xf_width,
             iters = 3
         )
