@@ -3,6 +3,7 @@ import torch as th
 import torch.nn as nn
 from glide_text2im.xf import LayerNorm, Transformer, convert_module_to_f16
 from slot_attention import SlotAttention
+from positional_encodings.torch_encodings import PositionalEncoding1D
 
 class NES(nn.Module):
 
@@ -19,6 +20,7 @@ class NES(nn.Module):
 
     self.xf_padding = xf_padding
     self.xf_width = xf_width
+    self.num_events = 3
     
     if xf_final_ln:
          self.final_ln = LayerNorm(xf_width)
@@ -27,13 +29,14 @@ class NES(nn.Module):
         self.token_embedding = nn.Embedding(n_vocab, xf_width)
         self.positional_embedding = nn.Parameter(th.empty(text_ctx, xf_width, dtype=th.float32))
         self.transformer_proj = nn.Linear(xf_width, model_channels * 4)
+        self.p_enc = PositionalEncoding1D(xf_width)
 
     if self.xf_padding:
         self.padding_embedding = nn.Parameter(
             th.empty(text_ctx, xf_width, dtype=th.float32)
         )
     self.slot_attn = SlotAttention(
-            num_slots = 1,
+            num_slots = self.num_events,
             dim = xf_width,
             iters = 3
         )
@@ -42,7 +45,9 @@ class NES(nn.Module):
   def forward(self, tokens=None, mask=None):
       assert tokens is not None
       xf_in = self.token_embedding(tokens.long())
-      xf_in = xf_in + self.positional_embedding[None]
+
+      pos_enc = self.p_enc(xf_in)
+      xf_in = xf_in + pos_enc
       if self.xf_padding:
           assert mask is not None
           xf_in = th.where(mask[..., None], xf_in, self.padding_embedding[None])
