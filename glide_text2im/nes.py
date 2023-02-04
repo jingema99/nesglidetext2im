@@ -46,7 +46,7 @@ class NES(nn.Module):
 
   def forward(self, tokens=None, mask=None):
       xf_in = self.token_embedding(tokens.long())
-      xf_in = xf_in + self.positional_embedding[None]
+      # xf_in = xf_in + self.positional_embedding[None]
       if self.xf_padding:
           assert mask is not None
           xf_in = th.where(mask[..., None], xf_in, self.padding_embedding[None])
@@ -57,7 +57,7 @@ class NES(nn.Module):
 
       Outputs = []
       for event_idx in range(self.num_events):
-        embedding = event_embedding[:,event_idx,:] #shape: [2,512]
+        embedding = event_embedding[:,event_idx] #shape: [2,512]
         xf_proj = self.transformer_proj(embedding)
         outputs = dict(xf_proj=xf_proj, xf_out=embedding.unsqueeze(2))
         Outputs.append(outputs)
